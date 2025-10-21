@@ -62,7 +62,7 @@ add_issue(Issue) ->
 to_map(#volume{name=Name, id=Id, response=Response, issues=Issues}) ->
     #{name => Name,
       id => Id,
-      response => Response,
+      '_response' => Response,
       issues => sets:to_list(Issues)}.
 
 set_owned(Id, Owned) ->

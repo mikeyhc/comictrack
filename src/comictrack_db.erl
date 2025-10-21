@@ -1,6 +1,6 @@
 -module(comictrack_db).
 -export([initialize/0, add_issue/1, add_issue_to_volume/2,
-         set_issue_owned/2, get_unowned_issues/0]).
+         get_unowned_issues/0]).
 -export([remove/2, get/1, get/2, add/2]).
 
 -define(VOLUMES_DB, "volumes.db").
@@ -72,27 +72,10 @@ get_issue(IssueId) ->
       issues,
       fun(IssuesDB) ->
               case dets:lookup(IssuesDB, IssueId) of
-                  [Issue] -> {ok, issue_to_map(Issue)};
+                  [Issue] -> {ok, Issue};
                   [] -> {error, not_found}
               end
       end).
-
-issue_to_map(#issue{id=Id, owned=Owned, response=Response}) ->
-    #{id => Id,
-      owned => Owned,
-      response => Response}.
-
-map_to_issue(#{id := Id, owned := Owned, response := Response}) ->
-    #issue{id=Id, owned=Owned, response=Response}.
-
-set_issue_owned(Id, Owned) ->
-    case get_issue(Id) of
-        {error, not_found} -> false;
-        {ok, Issue0} ->
-            Issue1 = Issue0#{owned := Owned},
-            write_issue(map_to_issue(Issue1)),
-            true
-    end.
 
 get_unowned_issues() ->
     with_connection(
@@ -101,7 +84,7 @@ get_unowned_issues() ->
               dets:foldl(fun(I, L) ->
                                  if I#issue.owned -> L;
                                     true ->
-                                        [issue_to_map(I)|L]
+                                        [I|L]
                                  end
                          end,
                          [],

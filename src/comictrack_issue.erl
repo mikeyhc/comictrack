@@ -11,7 +11,7 @@
                 response      :: any()
                }).
 
-display_name(Issue) ->
+display_name(#{'_response' := Issue}) ->
     #{<<"name">> := Name,
       <<"issue_number">> := Number,
       <<"id">> := Id,
@@ -37,9 +37,9 @@ remove(IssueId) ->
 
 set_owned(Id, Value) -> comictrack_db:set_issue_owned(Id, Value).
 
-store_date_sort(#{<<"store_date">> := A}, #{<<"store_date">> := B}) -> A < B.
+store_date_sort(#{store_date := A}, #{store_date := B}) -> A < B.
 
-valid_store_date(#{<<"store_date">> := StoreDate}) ->
+valid_store_date(#{store_date := StoreDate}) ->
     {{Y0, M0, D0}, _Time} = calendar:local_time(),
     [Y1, M1, D1] = lists:map(fun list_to_integer/1,
                              string:split(binary_to_list(StoreDate), "-", all)),
@@ -51,7 +51,7 @@ valid_store_date(#{<<"store_date">> := StoreDate}) ->
     end.
 
 get_unowned_issues() ->
-    comictrack_db:get_unowned_issues().
+    lists:map(fun to_map/1, comictrack_db:get_unowned_issues()).
 
 get(IssueId) ->
     case comictrack_db:get(?TABLE_NAME, IssueId) of
@@ -60,6 +60,8 @@ get(IssueId) ->
     end.
 
 to_map(#issue{id=Id, owned=Owned, response=Response}) ->
+    #{<<"store_date">> := StoreDate} = Response,
     #{id => Id,
       owned => Owned,
-      response => Response}.
+      store_date => StoreDate,
+      '_response' => Response}.

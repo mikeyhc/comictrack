@@ -162,7 +162,7 @@ sync_all_volumes() ->
 
 
 issue_singleline(Issue) ->
-    DisplayName = comictrack_issue:display_name(maps:get(response, Issue)),
+    DisplayName = comictrack_issue:display_name(Issue),
     IsOwned = fun(#{owned := Owned}) -> Owned end,
     Tags = comictrack_tui:build_tags(
              [{IsOwned, {green, "O"}, {bright_yellow, "U"}}],
@@ -188,13 +188,12 @@ own_volume(Id) ->
 unowned_issues() ->
     lists:foreach(fun(I) ->
                           Name = comictrack_issue:display_name(I),
-                          #{<<"store_date">> := Date} = I,
+                          #{store_date := Date} = I,
                           io:format("~s (~s)~n", [Name, Date])
                   end,
                   lists:sort(fun comictrack_issue:store_date_sort/2,
                              lists:filter(fun comictrack_issue:valid_store_date/1,
-                                          lists:map(fun(#{response := R}) -> R end,
-                                                    comictrack_issue:get_unowned_issues())))).
+                                          comictrack_issue:get_unowned_issues()))).
 
 remove_volume(Id) ->
     case comictrack_volume:remove(list_to_integer(Id)) of
